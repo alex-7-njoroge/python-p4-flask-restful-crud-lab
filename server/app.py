@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request, make_response, abort
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 
@@ -49,6 +49,44 @@ class PlantByID(Resource):
 
 
 api.add_resource(PlantByID, '/plants/<int:id>')
+
+# PATCH /plants/<id>: Update plant's 'is_in_stock' status
+@app.route('/plants/<int:id>', methods=['PATCH'])
+def update_plant(id):
+    plant = db.session.get(Plant, id)  # Fetch plant using Session.get()
+    
+    if not plant:
+        abort(404, description="Plant not found")
+    
+    data = request.get_json()
+    
+    # Update only the 'is_in_stock' attribute (can expand to other fields if needed)
+    if 'is_in_stock' in data:
+        plant.is_in_stock = data['is_in_stock']
+    
+    db.session.commit()
+    
+    # Return the updated plant as JSON
+    return jsonify({
+        "id": plant.id,
+        "name": plant.name,
+        "image": plant.image,
+        "price": plant.price,
+        "is_in_stock": plant.is_in_stock
+    })
+
+@app.route('/plants/<int:id>', methods=['DELETE'])
+def delete_plant(id):
+    plant = db.session.get(Plant, id)  # Fetch plant using Session.get()
+    
+    if not plant:
+        abort(404, description="Plant not found")
+    
+    db.session.delete(plant)
+    db.session.commit()
+    
+    # Return an empty string and status code 204 (No Content)
+    return '', 204
 
 
 if __name__ == '__main__':
