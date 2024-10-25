@@ -15,7 +15,7 @@ migrate = Migrate(app, db)
 db.init_app(app)
 
 api = Api(app)
-
+# class function
 
 class Plants(Resource):
 
